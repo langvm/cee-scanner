@@ -15,7 +15,9 @@ const (
 	_ = iota
 
 	IDENT
-	MARK
+	OPERATOR
+
+	DELIMITER
 
 	INT
 	FLOAT
@@ -420,8 +422,8 @@ func (s *Scanner) ScanIdent() ([]rune, error) {
 	}
 }
 
-// ScanMarkSeq scans CONSEQUENT marks except/until delimiters.
-func (s *Scanner) ScanMarkSeq() ([]rune, error) {
+// ScanOperator scans CONSEQUENT marks except/until delimiters.
+func (s *Scanner) ScanOperator() ([]rune, error) {
 	var seq []rune
 	for {
 		ch, err := s.GetChar()
@@ -476,15 +478,15 @@ func (s *Scanner) ScanToken() (Position, int, int, []rune, error) {
 
 	case s.Delimiters[ch] != 0: // Parentheses, brackets, braces, comma ...
 		ch, err := s.Move()
-		return begin, MARK, 0, []rune{ch}, err
+		return begin, DELIMITER, 0, []rune{ch}, err
 
 	case ch == '/': // Comment
 		format, lit, err := s.ScanComment()
 		return begin, COMMENT, format, lit, err
 
 	case IsMark(ch): // Operator
-		lit, err := s.ScanMarkSeq()
-		return begin, MARK, 0, lit, err
+		lit, err := s.ScanOperator()
+		return begin, OPERATOR, 0, lit, err
 
 	default:
 		panic("impossible")
