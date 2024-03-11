@@ -54,6 +54,18 @@ func (p Position) String() string {
 	return fmt.Sprint(p.Offset, ":", p.Line, ":", p.Column)
 }
 
+type PosRange struct {
+	Begin, End Position
+}
+
+func (p PosRange) String() string { return fmt.Sprintf(p.Begin.String(), " -> ", p.End.String()) }
+
+type Token struct {
+	PosRange
+	Kind, Format int
+	Literal      []rune
+}
+
 type BufferScanner struct {
 	Position // Cursor
 	Buffer   []rune
@@ -456,7 +468,7 @@ func (s *Scanner) ScanToken() (Position, int, int, []rune, error) {
 
 	ch, err := s.GetChar()
 	if err != nil {
-		return begin, 0, 0, nil, err
+		return Position{}, 0, 0, nil, err
 	}
 
 	switch {
@@ -491,4 +503,15 @@ func (s *Scanner) ScanToken() (Position, int, int, []rune, error) {
 	default:
 		panic("impossible")
 	}
+}
+
+func (s *Scanner) Scan() (Token, error) {
+	begin, kind, format, lit, err := s.ScanToken()
+
+	return Token{
+		PosRange: PosRange{begin, s.Position},
+		Kind:     kind,
+		Format:   format,
+		Literal:  lit,
+	}, err
 }
